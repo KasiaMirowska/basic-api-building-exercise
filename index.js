@@ -37,17 +37,25 @@ app.get('/books', (req, res, next) => {
 app.post('/books', (req, res, next) => {
     console.log(Object.keys(req))
     const knexInstance = req.app.get('db');
-
     const {title, year_published, genre} = req.body;
-    console.log(title,  ' LLLLLLLLLLLL')
     const newBook = {title, year_published, genre};
+    const genres = ['mystery', 'biography','thriller','history','historical-fiction', 'romance'];
    
+    for([key, value] of Object.entries(newBook)) {
+        if(value == null) {
+            return res.status(400).send({error: {message: `Missing ${key}`}})
+        }
+    }
+
+    if(!genre.includes(genres)) {
+        return res.status(400).send({error: {message: 'Genre must be one of mystery, biography, history, romance or historical-fiction only'}})
+    }
+
     BookstoreServices.postIntoBooks(knexInstance, newBook)
         .then(newBook => {
             res.status(201).json(newBook)
         })
         .catch(next)
-    
 })
 
 
@@ -60,8 +68,30 @@ app.get('/books/:id', (req, res, next) => {
                 res.status(404).send({error: {message: `there is no book with id ${bookId}`}})
             }
             res.status(200).json(book) })
+        .catch(next)   
     
 }) 
-    
+app.delete('/books/:id', (req, res, next) => {
+    const idToRemove = req.params.id;
+    const knexInstance = req.app.get('db');
+    console.log(idToRemove, '!!!!!!')
+    BookstoreServices.deleteBook(knexInstance, idToRemove)
+        .then(() => {
+            console.log("HERE?", idToRemove)
+            res.status(204).end()
+        })
+        .catch(next)
+}) ;
+app.patch('/books/:id', (req, res, next) => {
+    const knexInstance = req.app.get('db');
+    const idToUpdate = req.params.id;
+    const {title, year_published, genre} = req.body;
+    const fieldsToUpdate = {title, year_published, genre};
+
+    BookstoreServices.updateBook(knexInstance, idToUpdate, fieldsToUpdate)
+        .then(() => {
+            res.status(204).end()
+        })
+})  
 
 module.exports = app;

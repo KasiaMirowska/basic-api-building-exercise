@@ -16,6 +16,12 @@ const BookstoreServices = {
                     year_published: Number(rows[0].year_published)
             })
                 })
+    },
+    deleteBook: (knex, bookId) => {
+        return knex.from('books').select('*').where({id: bookId}).delete()
+    },
+    updateBook: (knex, bookId, filedsToUpdate) => {
+        return knex.from('books').select('*').where({id: bookId}).update(filedsToUpdate)
     }
 };
 module.exports = BookstoreServices;
